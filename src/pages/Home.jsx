@@ -1,43 +1,51 @@
-import Invoices from "../components/Invoices";
-import Header from "../components/Header";
 import { useEffect, useState } from "react";
+import Header from "../components/Header";
+import Invoices from "../components/Invoices";
+import LoadingInvoices from "../components/LoadingInvoices";
 
 export default function Home() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("");
+
   const [filterElement, setFilterElement] = useState([
     {
-      checked: "false",
+      checked: false,
       text: "draft",
     },
     {
-      checked: "false",
+      checked: false,
       text: "pending",
     },
     {
-      checked: "false",
+      checked: false,
       text: "paid",
     },
   ]);
 
-  // useEffect(() => {
-  //   const result = filterElement.map((el) => {
-  //     if (el.checked) {
-  //       return `|${el.text}`;
-  //     } else {
-  //       return "";
-  //     }
-  //   });
+  useEffect(() => {
+    const result = filterElement
+      .map((el) => {
+        if (el.checked) {
+          return `|${el.text}`;
+        } else {
+          return "";
+        }
+      })
+      .join("")
+      .slice(1);
 
-  //   setFilter(result.slice(1));
-  //   console.log(result.slice(1));
-  // }, [JSON.stringify(filterElement)]);
+    setFilter(result);
+  }, [JSON.stringify(filterElement)]);
 
   useEffect(() => {
     setLoading(true);
-    fetch("https://json-api.uz/api/project/invoice-app-fn43/invoices")
+    fetch(
+      `https://json-api.uz/api/project/invoice-app-fn43/invoices${
+        filter !== "" ? `?status=${filter}` : filter
+      }`
+    )
       .then((res) => {
         return res.json();
       })
@@ -46,12 +54,12 @@ export default function Home() {
         console.log(res.data);
       })
       .catch(() => {
-        setError("Xatolik");
+        setError("Something went wrong :(");
       })
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [filter]);
 
   return (
     <div>
@@ -59,6 +67,7 @@ export default function Home() {
         total={invoices.length > 0 ? invoices.length : null}
         filterElement={filterElement}
         setFilterElement={setFilterElement}
+        setInvoices={setInvoices}
       />
       <Invoices invoices={invoices} loading={loading} error={error} />
     </div>
